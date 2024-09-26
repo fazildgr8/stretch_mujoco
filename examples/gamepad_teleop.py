@@ -7,10 +7,6 @@ from gamepad_controller import GamePadController
 from stretch_mujoco import StretchMujocoSimulator
 from stretch_mujoco.utils import display_camera_feeds
 
-robot_sim = None
-gamepad = None
-
-
 button_mapping = {
     "top_pad_pressed": ["wrist_pitch", 1, 0.05],
     "bottom_pad_pressed": ["wrist_pitch", -1, 0.05],
@@ -36,12 +32,15 @@ def map_value(value, in_min, in_max, out_min, out_max):
     return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
 
-def gamepad_loop():
-    global robot_sim, gamepad
+def gamepad_loop(robot_sim, gamepad):
     dex_switch = False
     gripper_val = robot_sim.status["gripper"]["pos"]
     while True:
         time.sleep(1 / 15)
+        if not gamepad.active:
+            continue
+        if gamepad.stop_thread:
+            break
         gamepad_state = gamepad.get_state()
         for button in button_mapping.keys():
             if gamepad_state[button]:
@@ -99,12 +98,24 @@ def gamepad_loop():
             robot_sim.stow()
 
 
+class GamePad(GamePadController):
+    active = False
+
+    def activate(self):
+        self.active = True
+
+    def deactivate(self):
+        self.active = False
+
+    def stop(self):
+        return super().stop()
+
+
 @click.command()
 @click.option("--scene-xml-path", type=str, default=None, help="Path to the scene xml file")
 @click.option("--robocasa-env", is_flag=True, help="Use robocasa environment")
 @click.option("--headless", is_flag=True, help="Run in headless mode")
 def main(scene_xml_path: str, robocasa_env: bool, headless: bool):
-    global robot_sim, gamepad
     if robocasa_env:
         from stretch_mujoco.robocasa_gen import model_generation_wizard
 
@@ -115,11 +126,13 @@ def main(scene_xml_path: str, robocasa_env: bool, headless: bool):
         robot_sim = StretchMujocoSimulator(scene_xml_path=scene_xml_path)
     else:
         robot_sim = StretchMujocoSimulator()
-    gamepad = GamePadController()
+    gamepad = GamePad()
     robot_sim.start(headless=headless)
     gamepad.start()
-    threading.Thread(target=gamepad_loop).start()
-    display_camera_feeds()
+
+    gamepad.activate()
+    threading.Thread(target=gamepad_loop, args=(robot_sim, gamepad)).start()
+    display_camera_feeds(robot_sim)
 
 
 if __name__ == "__main__":
