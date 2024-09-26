@@ -9,6 +9,7 @@ from robocasa.models.objects.kitchen_object_utils import (
     sample_kitchen_object_helper,
 )
 from robocasa.models.objects.objects import MJCFObject
+from scipy.spatial.transform import Rotation as R
 
 import stretch_mujoco.utils as utils
 from stretch_mujoco import StretchMujocoSimulator
@@ -25,13 +26,8 @@ def create_obj(cfg: dict, obj_num: int = 0) -> Tuple[MJCFObject, dict]:
         cfg (dict): Configuration dictionary
         obj_num (int): Object number needs to be unique if multiple objects are created
     """
-    if "info" in cfg:
-        """
-        if cfg has "info" key in it, that means it is storing meta data already
-        that indicates which object we should be using.
-        set the obj_groups to this path to do deterministic playback
-        """
-        mjcf_path = cfg["info"]["mjcf_path"]
+    if "mjcf_path" in cfg:
+        mjcf_path = cfg["mjcf_path"]
         # replace with correct base path
         new_base_path = os.path.join(robocasa.models.assets_root, "objects")
         new_path = os.path.join(new_base_path, mjcf_path.split("/objects/")[-1])
@@ -114,16 +110,31 @@ def insert_assets_into_xml(xml: str, assets_lines: list) -> str:
 
 
 if __name__ == "__main__":
-    object_group = [
-        "cup",
-    ]
-    kargs, info = sample_kitchen_object_helper(groups=object_group, graspable=True)
+    object_group = ["coffee_cup"]
+    kargs, info = sample_kitchen_object_helper(
+        groups=object_group,
+        graspable=True,
+        washable=False,
+        microwavable=True,
+        cookable=False,
+        freezable=False,
+    )
+    print(kargs)
+    print(info)
     obj, info = create_obj(kargs)
     obj_xml = obj.get_xml()
     asset_xml = extract_obj_asset_xml(obj_xml)
     body_xml = extract_object_body_xml(obj_xml)
 
-    robot_pose_attrib = {"pos": "0 0 0", "quat": "0 0 0 1"}
+    def euler_to_quat(euler_angles):
+        r = R.from_euler("xyz", euler_angles)
+        quat = r.as_quat()
+        return tuple(quat)
+
+    # Example usage
+    euler_angles = (3.14, 0, 0)
+    quat = euler_to_quat(euler_angles)
+    robot_pose_attrib = {"pos": "0 0 0", "quat": f"{quat[0]} {quat[1]} {quat[2]} {quat[3]}"}
     stretch_xml_path = utils.get_absolute_path_stretch_xml(robot_pose_attrib)
     with open(f"{utils.models_path}/grasp_scene.xml", "r") as file:
         scene_model_xml = file.read()
@@ -134,6 +145,9 @@ if __name__ == "__main__":
 
     scene_model_xml = insert_tree_into_worldbody(scene_model_xml, body_xml)
     scene_model_xml = insert_assets_into_xml(scene_model_xml, asset_xml)
+    scene_model_xml = utils.xml_modify_body_pos(
+        scene_model_xml, "body", "obj_1_main", [0, -0.65, 0.6], [0, 0, 0, 1]
+    )
     scene_model = mujoco.MjModel.from_xml_string(scene_model_xml)
     # breakpoint()
 
