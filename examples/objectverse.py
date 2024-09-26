@@ -145,4 +145,9 @@ if __name__ == "__main__":
     # breakpoint()
 
     robot = StretchMujocoSimulator(model=scene_model)
-    robot.start()
+    robot.start(show_viewer_ui=True)
+    robot.move_to("head_pan", -1.5)
+    robot.move_to("head_tilt", -0.725)
+    robot.move_to("wrist_pitch", -0.62)
+    robot.move_to("gripper", 0.6)
+    utils.display_camera_feeds(robot)
