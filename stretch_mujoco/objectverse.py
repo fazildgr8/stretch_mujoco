@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 import mujoco
 import robocasa.models
-from gamepad_teleop import GamePad
 from robocasa.models.objects.kitchen_object_utils import (
     sample_kitchen_object,
     sample_kitchen_object_helper,
@@ -14,6 +13,8 @@ from scipy.spatial.transform import Rotation as R
 
 import stretch_mujoco.utils as utils
 from stretch_mujoco import StretchMujocoSimulator
+
+from .gamepad_teleop import GamePad
 
 """
 object_group = ["all","cup","waffles","fruit",...]
