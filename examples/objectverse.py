@@ -1,6 +1,6 @@
 import os
 import xml.etree.ElementTree as ET
-from typing import Tuple
+from typing import List, Tuple
 
 import mujoco
 import robocasa.models
@@ -110,11 +110,14 @@ def insert_assets_into_xml(xml: str, assets_lines: list) -> str:
     return ET.tostring(root, encoding="unicode")
 
 
-if __name__ == "__main__":
-    object_group = ["mug", "water_bottle"]  # ["coffee_cup","cup", "mug", "water_bottle"]
+def generate_basic_grasp_scene_model(
+    object_group: List[str] = ["mug", "water_bottle"]
+) -> mujoco.MjModel:
+    """
+    High level convenience function to create a basic grasp scene including stretch
+    with the given object group.
+    """
     kargs, info = sample_kitchen_object_helper(groups=object_group, graspable=True)
-    print(kargs)
-    print(info)
     obj, info = create_obj(kargs)
     obj_xml = obj.get_xml()
     obj_asset_xml = extract_obj_asset_xml(obj_xml)
@@ -142,8 +145,11 @@ if __name__ == "__main__":
     scene_model_xml = utils.xml_modify_body_pos(
         scene_model_xml, "body", "obj_1_main", [0, -0.65, 0.6], [0, 0, 0, 1]
     )
-    scene_model = mujoco.MjModel.from_xml_string(scene_model_xml)
+    return mujoco.MjModel.from_xml_string(scene_model_xml)
 
+
+if __name__ == "__main__":
+    scene_model = generate_basic_grasp_scene_model()
     robot = StretchMujocoSimulator(model=scene_model)
     robot.start(show_viewer_ui=True)
     robot.move_to("head_pan", -1.5)
