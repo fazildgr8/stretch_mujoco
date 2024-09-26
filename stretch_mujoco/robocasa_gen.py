@@ -6,7 +6,7 @@ import mujoco
 import mujoco.viewer
 import numpy as np
 import robosuite
-from robocasa.models.scenes.scene_registry import LayoutType, StyleType
+from robocasa.models.scenes.scene_registry import StyleType
 from robosuite import load_controller_config
 from termcolor import colored
 
@@ -22,9 +22,7 @@ from stretch_mujoco.utils import (
 
 
 def get_styles() -> OrderedDict:
-    raw_styles = dict(
-        map(lambda item: (item.value, item.name.lower().capitalize()), StyleType)
-    )
+    raw_styles = dict(map(lambda item: (item.value, item.name.lower().capitalize()), StyleType))
     styles = OrderedDict()
     for k in sorted(raw_styles.keys()):
         if k < 0:
