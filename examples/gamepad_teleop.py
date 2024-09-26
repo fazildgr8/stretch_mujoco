@@ -107,8 +107,9 @@ class GamePad(GamePadController):
     def deactivate(self):
         self.active = False
 
-    def stop(self):
-        return super().stop()
+    def run_aync(self, robot_sim):
+        self.start()
+        threading.Thread(target=gamepad_loop, args=(robot_sim, self)).start()
 
 
 @click.command()
@@ -128,10 +129,9 @@ def main(scene_xml_path: str, robocasa_env: bool, headless: bool):
         robot_sim = StretchMujocoSimulator()
     gamepad = GamePad()
     robot_sim.start(headless=headless)
-    gamepad.start()
+    gamepad.run_aync(robot_sim)
 
     gamepad.activate()
-    threading.Thread(target=gamepad_loop, args=(robot_sim, gamepad)).start()
     display_camera_feeds(robot_sim)
 
 

@@ -4,6 +4,7 @@ from typing import Tuple
 
 import mujoco
 import robocasa.models
+from gamepad_teleop import GamePad
 from robocasa.models.objects.kitchen_object_utils import (
     sample_kitchen_object,
     sample_kitchen_object_helper,
@@ -149,4 +150,8 @@ if __name__ == "__main__":
     robot.move_to("head_tilt", -0.725)
     robot.move_to("wrist_pitch", -0.62)
     robot.move_to("gripper", 0.6)
+
+    gamepad = GamePad()
+    gamepad.run_aync(robot)
+    gamepad.activate()
     utils.display_camera_feeds(robot)
