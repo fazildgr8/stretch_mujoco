@@ -110,15 +110,8 @@ def insert_assets_into_xml(xml: str, assets_lines: list) -> str:
 
 
 if __name__ == "__main__":
-    object_group = ["coffee_cup"]
-    kargs, info = sample_kitchen_object_helper(
-        groups=object_group,
-        graspable=True,
-        washable=False,
-        microwavable=True,
-        cookable=False,
-        freezable=False,
-    )
+    object_group = ["mug", "water_bottle"]  # ["coffee_cup","cup", "mug", "water_bottle"]
+    kargs, info = sample_kitchen_object_helper(groups=object_group, graspable=True)
     print(kargs)
     print(info)
     obj, info = create_obj(kargs)
