@@ -116,8 +116,8 @@ if __name__ == "__main__":
     print(info)
     obj, info = create_obj(kargs)
     obj_xml = obj.get_xml()
-    asset_xml = extract_obj_asset_xml(obj_xml)
-    body_xml = extract_object_body_xml(obj_xml)
+    obj_asset_xml = extract_obj_asset_xml(obj_xml)
+    obj_body_xml = extract_object_body_xml(obj_xml)
 
     def euler_to_quat(euler_angles):
         r = R.from_euler("xyz", euler_angles)
@@ -136,13 +136,12 @@ if __name__ == "__main__":
         f' <include file="{stretch_xml_path}"/>',
     )
 
-    scene_model_xml = insert_tree_into_worldbody(scene_model_xml, body_xml)
-    scene_model_xml = insert_assets_into_xml(scene_model_xml, asset_xml)
+    scene_model_xml = insert_tree_into_worldbody(scene_model_xml, obj_body_xml)
+    scene_model_xml = insert_assets_into_xml(scene_model_xml, obj_asset_xml)
     scene_model_xml = utils.xml_modify_body_pos(
         scene_model_xml, "body", "obj_1_main", [0, -0.65, 0.6], [0, 0, 0, 1]
     )
     scene_model = mujoco.MjModel.from_xml_string(scene_model_xml)
-    # breakpoint()
 
     robot = StretchMujocoSimulator(model=scene_model)
     robot.start(show_viewer_ui=True)
